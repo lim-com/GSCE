@@ -1,10 +1,171 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Emscripten-Generated Code</title>
 </head>
+<style>
+    #canvas-container {
+        position: relative;          /* Теперь это точка отсчёта для absolute-элементов */
+        display: inline-block;       /* чтобы контейнер облегал canvas */
+        line-height: 0;
+        border-radius: 8px;
+        overflow: hidden;            /* скроет возможные выступающие края */
+        box-shadow: 0 8px 24px rgba(0,0,0,0.7);
+    }
+
+    #overlay-title {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        color: white;
+        background: rgba(0, 0, 0, 0.5);
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-weight: 400;
+        font-size: 1.3rem;
+        margin: 0;
+        pointer-events: none;        /* не мешает кликам по canvas */
+        z-index: 10;
+    }
+
+    .controls {
+        position: absolute;
+        bottom: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(30, 30, 30, 0.85);
+        backdrop-filter: blur(6px);   /* лёгкое размытие подложки */
+        padding: 10px 20px;
+        border-radius: 12px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        z-index: 10;
+        pointer-events: auto;         /* кнопки должны быть кликабельны */
+    }
+
+    /* Остальные стили для input/button оставьте как есть */
+    canvas {
+        display: block;
+        background: #000;
+        position: relative;
+        z-index: 1;                   /* самый нижний слой */
+    }
+</style>
 <body>
+<div id="canvas-container">
+    <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+    <div class="controls">
+        <label>Ширина:</label>
+        <input type="number" id="widthInput" value="800" min="100" max="3840" step="1">
+        <label>Высота:</label>
+        <input type="number" id="heightInput" value="600" min="100" max="2160" step="1">
+        <button id="resizeBtn">🔄 Применить</button>
+        <button id="preset800">800x600</button>
+        <button id="preset1024">1024x768</button>
+        <button id="presetFullHD">1920x1080</button>
+    </div>
+</div>
+
+<script>
+    // Создаём объект Module, который Emscripten дополнит своими методами.
+    // canvas должен быть найден в DOM на момент выполнения этого скрипта.
+    var Module = {
+        canvas: document.getElementById('canvas')
+    };
+    // Проверка на случай отсутствия элемента (страховка)
+    if (!Module.canvas) {
+        console.error('Canvas #canvas не найден! Убедитесь, что элемент существует.');
+    }
+</script>
+
+<!-- Подключите скомпилированный JS-файл (сгенерированный Emscripten) -->
+<!-- Замените "mygame.js" на имя вашего JS-файла сборки -->
+<!--<script src="GSCE.js"></script>-->
+
+<script>
+    (function() {
+        // Функция изменения размера холста и вызова Wasm-метода
+        function resizeCanvas(width, height) {
+            const canvas = document.getElementById('canvas');
+            if (!canvas) {
+                console.error('Canvas #canvas не найден');
+                return;
+            }
+
+            // Проверяем, что модуль Wasm инициализирован и SetWindowSize доступна
+            if (typeof Module !== 'undefined' && Module._ResizeCanvas) {
+                // Вызываем raylib-функцию для настоящего изменения размера окна/контекста
+                Module._ResizeCanvas(width, height);
+
+                // Синхронизируем атрибуты canvas (не обязательно, но полезно для CSS/позиционирования)
+                canvas.width = width;
+                canvas.height = height;
+
+                console.log(`✅ Размер изменён на ${width}x${height}`);
+            } else {
+                alert('Модуль Wasm ещё не готов или функция SetWindowSize не экспортирована.\n' +
+                    'Добавьте в C-код EMSCRIPTEN_KEEPALIVE для SetWindowSize или укажите экспорт при компиляции.');
+            }
+        }
+
+        // Обработчик кнопки "Применить"
+        document.getElementById('resizeBtn').addEventListener('click', function() {
+            const w = parseInt(document.getElementById('widthInput').value, 10);
+            const h = parseInt(document.getElementById('heightInput').value, 10);
+            if (!isNaN(w) && !isNaN(h) && w > 0 && h > 0) {
+                resizeCanvas(w, h);
+            } else {
+                alert('Введите корректные положительные числа.');
+            }
+        });
+
+        // Предустановленные размеры
+        document.getElementById('preset800').addEventListener('click', function() {
+            document.getElementById('widthInput').value = 800;
+            document.getElementById('heightInput').value = 600;
+            resizeCanvas(800, 600);
+        });
+        document.getElementById('preset1024').addEventListener('click', function() {
+            document.getElementById('widthInput').value = 1024;
+            document.getElementById('heightInput').value = 768;
+            resizeCanvas(1024, 768);
+        });
+        document.getElementById('presetFullHD').addEventListener('click', function() {
+            document.getElementById('widthInput').value = 1920;
+            document.getElementById('heightInput').value = 1080;
+            resizeCanvas(1920, 1080);
+        });
+
+        // Автоматически обновить поля ввода после инициализации Wasm (если размер стал другим)
+        // Можно отложенно проверить текущий размер canvas
+        function syncInputsFromCanvas() {
+            const canvas = document.getElementById('canvas');
+            if (canvas && canvas.width && canvas.height) {
+                document.getElementById('widthInput').value = canvas.width;
+                document.getElementById('heightInput').value = canvas.height;
+            }
+        }
+
+        // Пытаемся несколько раз синхронизировать, т.к. Wasm инициализация может занять время
+        let attempts = 0;
+        const maxAttempts = 20;
+        const interval = setInterval(function() {
+            if (typeof Module !== 'undefined' && Module._ResizeCanvas) {
+                syncInputsFromCanvas();
+                clearInterval(interval);
+                console.log('📐 Размер холста синхронизирован с WASM.');
+            } else if (++attempts >= maxAttempts) {
+                clearInterval(interval);
+                console.warn('Не удалось дождаться инициализации Wasm модуля.');
+            }
+        }, 500);
+    })();
+</script>
+
+{{{ SCRIPT }}}
 
 </body>
 </html>

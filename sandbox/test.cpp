@@ -2,74 +2,140 @@
 // Created by lim on 08.07.2026.
 //
 
-#define SDL_MAIN_HANDLED
-#include "test.h"
-#include <SDL.h>
 #include <iostream>
+#include <ostream>
+
+#include "raylib.h"
+#include "cmath"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-SDL_Window* window = nullptr;
-SDL_Renderer* renderer = nullptr;
-bool running = true;
-Uint8 color = 0;
-bool peak = false;
-
-
-
-void mainLoop() {
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT) {
-            running = false;
-#ifdef __EMSCRIPTEN__
-            emscripten_cancel_main_loop();
-#endif
-        }
-    }
-
-    if (color >= 255) peak = true;
-    if (color <= 0) peak = false;
-
-    color = peak ? color -= 1 : color += 1;
-
-    if (color > 255) color = 255;
-    if (color < 0) color = 0;
-
-    //std::cout << "color = " << color << std::endl;
-
-
-    SDL_SetRenderDrawColor(renderer, color, 0, 0, 250);
-    SDL_RenderClear(renderer);
-    SDL_RenderPresent(renderer);
-
+EMSCRIPTEN_KEEPALIVE void ResizeCanvas(int width, int height)
+{
+    SetWindowSize(width, height);
 }
-
-int main() {
-    SDL_SetMainReady();
-    SDL_SetHint(SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT, "#canvas");
-    SDL_Init(SDL_INIT_VIDEO);
-
-
-
-    window = SDL_CreateWindow("GSCE Debug Window",
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        1280, 720, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
-
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-
-#ifdef __EMSCRIPTEN__
-    emscripten_set_main_loop(mainLoop, 0, true); // 0 = использовать requestAnimationFrame, 1 = simulate infinite loop
-#else
-    while (running) {
-        mainLoop();
-    }
+#ifdef __cplusplus
+}
+#endif
 #endif
 
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
+//------------------------------------------------------------------------------------
+// Program main entry point
+//------------------------------------------------------------------------------------
+int main(void)
+{
+    // Initialization
+    //--------------------------------------------------------------------------------------
+    const int screenWidth = 800;
+    const int screenHeight = 450;
+
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    InitWindow(screenWidth, screenHeight, "raylib [core] example - 3d picking");
+
+    // Define the camera to look into our 3d world
+    Camera camera = { 0 };
+    camera.position = (Vector3){ 10.0f, 10.0f, 10.0f }; // Camera position
+    camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
+    camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
+    camera.fovy = 45.0f;                                // Camera field-of-view Y
+    camera.projection = CAMERA_PERSPECTIVE;             // Camera projection type
+
+    Vector3 cubePosition = { 0.0f, 1.0f, 0.0f };
+    Vector3 cubeSize = { 2.0f, 2.0f, 2.0f };
+
+    Ray ray = { 0 };                    // Picking line ray
+    RayCollision collision = { 0 };     // Ray collision hit info
+
+    int xFPS = 10;
+    int yFPS = 10;
+    SetTargetFPS(120);                   // Set our game to run at 60 frames-per-second
+    //--------------------------------------------------------------------------------------
+
+    // Main game loop
+    while (!WindowShouldClose())        // Detect window close button or ESC key
+    {
+        if (IsWindowResized())
+        {
+            std::cout << "window resized" << std::endl;
+        }
+        // Update
+        //----------------------------------------------------------------------------------
+        if (IsCursorHidden()) UpdateCamera(&camera, CAMERA_FIRST_PERSON);
+
+        // Toggle camera controls
+        if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
+        {
+            if (IsCursorHidden()) EnableCursor();
+            else DisableCursor();
+        }
+
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        {
+            if (!collision.hit)
+            {
+                ray = GetScreenToWorldRay(GetMousePosition(), camera);
+
+                // Check collision between ray and box
+                collision = GetRayCollisionBox(ray,
+                            (BoundingBox){(Vector3){ cubePosition.x - cubeSize.x/2, cubePosition.y - cubeSize.y/2, cubePosition.z - cubeSize.z/2 },
+                                          (Vector3){ cubePosition.x + cubeSize.x/2, cubePosition.y + cubeSize.y/2, cubePosition.z + cubeSize.z/2 }});
+            }
+            else collision.hit = false;
+        }
+        //----------------------------------------------------------------------------------
+
+        // Draw
+        //----------------------------------------------------------------------------------
+        BeginDrawing();
+
+            ClearBackground(RAYWHITE);
+
+            BeginMode3D(camera);
+
+                if (collision.hit)
+                {
+                    DrawCube(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, RED);
+                    DrawCubeWires(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, MAROON);
+
+                    DrawCubeWires(cubePosition, cubeSize.x + 0.2f, cubeSize.y + 0.2f, cubeSize.z + 0.2f, GREEN);
+                }
+                else
+                {
+                    DrawCube(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, GRAY);
+                    DrawCubeWires(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, DARKGRAY);
+                }
+
+                DrawRay(ray, MAROON);
+                DrawGrid(20, 1.0f);
+
+            EndMode3D();
+
+            DrawText("Try clicking on the box with your mouse!", 240, 10, 20, DARKGRAY);
+
+            if (collision.hit) DrawText("BOX SELECTED", (screenWidth - MeasureText("BOX SELECTED", 30))/2, (int)(screenHeight*0.1f), 30, GREEN);
+
+            DrawText("Right click mouse to toggle camera controls", 10, 430, 10, GRAY);
+
+            if (IsKeyPressed(KEY_F))
+            {
+                xFPS = xFPS == 10 ? screenWidth - 100 : 10;
+                std::cout << xFPS << ": F key pressed" << std::endl;
+            }
+            DrawFPS(xFPS, yFPS);
+
+        EndDrawing();
+        //----------------------------------------------------------------------------------
+    }
+
+    // De-Initialization
+    //--------------------------------------------------------------------------------------
+    CloseWindow();        // Close window and OpenGL context
+    //--------------------------------------------------------------------------------------
+
     return 0;
 }
