@@ -27,7 +27,8 @@ if(EMSCRIPTEN)
             -sUSE_GLFW=3
             -sWASM=1
             -sASYNCIFY
-            "--shell-file" "${SHELL_FILE}"
+            --shell-file ${SHELL_FILE}
+            -s EXPORTED_RUNTIME_METHODS='["requestFullscreen","requestPointerLock"]'
     )
 
 elseif(WIN32)

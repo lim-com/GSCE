@@ -9,9 +9,8 @@
         position: relative;          /* Теперь это точка отсчёта для absolute-элементов */
         display: inline-block;       /* чтобы контейнер облегал canvas */
         line-height: 0;
-        border-radius: 8px;
+        border-radius: 0;
         overflow: hidden;            /* скроет возможные выступающие края */
-        box-shadow: 0 8px 24px rgba(0,0,0,0.7);
     }
 
     #overlay-title {
@@ -29,21 +28,44 @@
         z-index: 10;
     }
 
+    input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 140px;               /* подберите нужную ширину */
+        height: 6px;
+        background: #4a4a4a;        /* дорожка */
+        border-radius: 3px;
+        outline: none;
+        cursor: pointer;
+        margin: 0 8px;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #f0f0f0;
+        border: 2px solid #888;
+        cursor: pointer;
+    }
+
     .controls {
         position: absolute;
         bottom: 15px;
         left: 50%;
         transform: translateX(-50%);
-        background: rgba(30, 30, 30, 0.85);
+        background: rgba(0, 0, 0, 0);
         backdrop-filter: blur(6px);   /* лёгкое размытие подложки */
         padding: 10px 20px;
-        border-radius: 12px;
+        border-radius: 14px;
+        border-color: bisque;
         display: flex;
         gap: 10px;
         align-items: center;
         flex-wrap: wrap;
         z-index: 10;
         pointer-events: auto;         /* кнопки должны быть кликабельны */
+
     }
 
     /* Остальные стили для input/button оставьте как есть */
@@ -58,14 +80,13 @@
 <div id="canvas-container">
     <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
     <div class="controls">
-        <label>Ширина:</label>
-        <input type="number" id="widthInput" value="800" min="100" max="3840" step="1">
-        <label>Высота:</label>
-        <input type="number" id="heightInput" value="600" min="100" max="2160" step="1">
-        <button id="resizeBtn">🔄 Применить</button>
-        <button id="preset800">800x600</button>
-        <button id="preset1024">1024x768</button>
-        <button id="presetFullHD">1920x1080</button>
+        <label for="widthInput">Ширина: <span id="widthValue">800</span></label>
+        <input type="range" id="widthInput" min="" max="3840" value="800" step="1">
+
+        <label for="heightInput">Высота: <span id="heightValue">600</span></label>
+        <input type="range" id="heightInput" min="720" max="1080" value="600" step="1">
+        <button id="fullscreenBtn" onclick="Module.canvas.requestFullscreen()">FULLSCREEN</button>
+        <button id="resizeBtn">🔄 apply</button>
     </div>
 </div>
 
@@ -120,23 +141,6 @@
             } else {
                 alert('Введите корректные положительные числа.');
             }
-        });
-
-        // Предустановленные размеры
-        document.getElementById('preset800').addEventListener('click', function() {
-            document.getElementById('widthInput').value = 800;
-            document.getElementById('heightInput').value = 600;
-            resizeCanvas(800, 600);
-        });
-        document.getElementById('preset1024').addEventListener('click', function() {
-            document.getElementById('widthInput').value = 1024;
-            document.getElementById('heightInput').value = 768;
-            resizeCanvas(1024, 768);
-        });
-        document.getElementById('presetFullHD').addEventListener('click', function() {
-            document.getElementById('widthInput').value = 1920;
-            document.getElementById('heightInput').value = 1080;
-            resizeCanvas(1920, 1080);
         });
 
         // Автоматически обновить поля ввода после инициализации Wasm (если размер стал другим)

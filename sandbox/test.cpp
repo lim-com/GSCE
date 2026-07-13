@@ -8,8 +8,10 @@
 #include "raylib.h"
 #include "cmath"
 
+
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#include <emscripten/html5.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,10 +21,14 @@ EMSCRIPTEN_KEEPALIVE void ResizeCanvas(int width, int height)
 {
     SetWindowSize(width, height);
 }
+
 #ifdef __cplusplus
 }
 #endif
 #endif
+
+constexpr float cameraSensitivity = 0.1f;
+constexpr float cameraMovementSpeed = 0.1f;
 
 //------------------------------------------------------------------------------------
 // Program main entry point
@@ -33,6 +39,11 @@ int main(void)
     //--------------------------------------------------------------------------------------
     const int screenWidth = 800;
     const int screenHeight = 450;
+
+    bool isCameraUsed = false;
+
+
+
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(screenWidth, screenHeight, "raylib [core] example - 3d picking");
@@ -51,8 +62,6 @@ int main(void)
     Ray ray = { 0 };                    // Picking line ray
     RayCollision collision = { 0 };     // Ray collision hit info
 
-    int xFPS = 10;
-    int yFPS = 10;
     SetTargetFPS(120);                   // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
 
@@ -65,14 +74,50 @@ int main(void)
         }
         // Update
         //----------------------------------------------------------------------------------
-        if (IsCursorHidden()) UpdateCamera(&camera, CAMERA_FIRST_PERSON);
+// Camera Transform
 
-        // Toggle camera controls
-        if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
+        if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
         {
-            if (IsCursorHidden()) EnableCursor();
-            else DisableCursor();
+            isCameraUsed = true;
+            if (!IsCursorHidden())
+            {
+                DisableCursor();
+            }
         }
+
+        if (IsMouseButtonUp(MOUSE_BUTTON_RIGHT))
+        {
+            isCameraUsed = false;
+            if (IsCursorHidden())
+            {
+                EnableCursor();
+            }
+
+        }
+
+        if (isCameraUsed)
+        {
+            float cameraMovementForward = 0.f;
+            float cameraMovementRight = 0.f;
+            float cameraMovementUp = 0.f;
+
+            if (IsKeyDown(KEY_W)) cameraMovementForward = 1.f * cameraMovementSpeed;
+            if (IsKeyDown(KEY_S)) cameraMovementForward = -1.f * cameraMovementSpeed;
+            if (IsKeyDown(KEY_D)) cameraMovementRight = 1.f * cameraMovementSpeed;
+            if (IsKeyDown(KEY_A)) cameraMovementRight = -1.f * cameraMovementSpeed;
+            if (IsKeyDown(KEY_Q)) cameraMovementUp = 1.f * cameraMovementSpeed;
+            if (IsKeyDown(KEY_E)) cameraMovementUp = -1.f * cameraMovementSpeed;
+
+            const Vector3 cameraMovementVector = {cameraMovementForward, cameraMovementRight,cameraMovementUp};
+
+            Vector2 mouseDelta = GetMouseDelta();
+            const Vector3 mouseRotationVector = {mouseDelta.x*cameraSensitivity, mouseDelta.y*cameraSensitivity, 0.0f};
+
+
+            UpdateCameraPro(&camera, cameraMovementVector, mouseRotationVector, 0);
+        }
+
+// CameraTransformEnded
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
@@ -123,10 +168,10 @@ int main(void)
 
             if (IsKeyPressed(KEY_F))
             {
-                xFPS = xFPS == 10 ? screenWidth - 100 : 10;
-                std::cout << xFPS << ": F key pressed" << std::endl;
+                ToggleFullscreen();
             }
-            DrawFPS(xFPS, yFPS);
+            DrawFPS(10, 10);
+
 
         EndDrawing();
         //----------------------------------------------------------------------------------
