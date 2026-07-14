@@ -6,6 +6,7 @@
 #include <ostream>
 
 #include "raylib.h"
+#include "entt.hpp"
 #include "cmath"
 
 
@@ -74,7 +75,14 @@ int main(void)
         }
         // Update
         //----------------------------------------------------------------------------------
-// Camera Transform
+
+        if (IsKeyPressed(KEY_T))
+        {
+            if (IsCursorHidden()) ShowCursor();
+            else HideCursor();
+        }
+
+        // Camera Transform
 
         if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
         {
@@ -117,7 +125,7 @@ int main(void)
             UpdateCameraPro(&camera, cameraMovementVector, mouseRotationVector, 0);
         }
 
-// CameraTransformEnded
+        // CameraTransformEnded
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
