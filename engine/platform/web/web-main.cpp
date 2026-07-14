@@ -43,9 +43,6 @@ int main(void)
 
     bool isCameraUsed = false;
 
-
-
-
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(screenWidth, screenHeight, "raylib [core] example - 3d picking");
 
