@@ -11,12 +11,14 @@ endif()
 if(EMSCRIPTEN)
     # Заставляем Emscripten создавать HTML
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
+    set(ASSETS_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/../../engine/source/resources/assets")
     set(SHELL_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../../engine/platform/web/default.html")
     target_link_options(shapebuilder PRIVATE
             -sUSE_GLFW=3
             -sWASM=1
             -sASYNCIFY
             --shell-file ${SHELL_FILE}
+            "SHELL:--preload-file ${ASSETS_FOLDER}@/"
             -s EXPORTED_RUNTIME_METHODS='["requestFullscreen","requestPointerLock"]'
     )
 endif ()

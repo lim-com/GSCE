@@ -60,7 +60,18 @@ int main(void)
     Ray ray = { 0 };                    // Picking line ray
     RayCollision collision = { 0 };     // Ray collision hit info
 
-    SetTargetFPS(120);                   // Set our game to run at 60 frames-per-second
+    //loadModel
+    Model model = LoadModel("Cross.obj");
+
+    std::cout << "model loaded" << std::endl;
+
+    if (model.meshes == NULL) {
+        // ... обработка ошибки, если модель не загрузилась
+        CloseWindow();
+        return -1;
+    }
+
+    SetTargetFPS(120);                   // Set our game to run at 120 frames-per-second
     //--------------------------------------------------------------------------------------
 
     // Main game loop
@@ -121,6 +132,10 @@ int main(void)
 
             UpdateCameraPro(&camera, cameraMovementVector, mouseRotationVector, 0);
         }
+        else
+        {
+            UpdateCamera(&camera, CAMERA_PERSPECTIVE);
+        }
 
         // CameraTransformEnded
 
@@ -147,18 +162,23 @@ int main(void)
 
             BeginMode3D(camera);
 
-                if (collision.hit)
-                {
-                    DrawCube(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, RED);
-                    DrawCubeWires(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, MAROON);
+                std::cout << "model drawn in frame" << std::endl;
 
-                    DrawCubeWires(cubePosition, cubeSize.x + 0.2f, cubeSize.y + 0.2f, cubeSize.z + 0.2f, GREEN);
-                }
-                else
-                {
-                    DrawCube(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, GRAY);
-                    DrawCubeWires(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, DARKGRAY);
-                }
+                DrawModel(model, {0, 0, 0}, 1.0f, GRAY);
+                DrawModelWires(model, {0, 0, 0}, 1.0f, WHITE);
+
+                // if (collision.hit)
+                // {
+                //     DrawCube(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, RED);
+                //     DrawCubeWires(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, MAROON);
+                //
+                //     DrawCubeWires(cubePosition, cubeSize.x + 0.2f, cubeSize.y + 0.2f, cubeSize.z + 0.2f, GREEN);
+                // }
+                // else
+                // {
+                //     DrawCube(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, GRAY);
+                //     DrawCubeWires(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, DARKGRAY);
+                // }
 
                 DrawRay(ray, MAROON);
                 DrawGrid(20, 1.0f);
@@ -184,6 +204,7 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
+    UnloadModel(model);
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
 
