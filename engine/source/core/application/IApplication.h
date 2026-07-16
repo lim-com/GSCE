@@ -19,8 +19,8 @@ namespace engine::core
             virtual ~IApplication();
 
         private:
-            uint32_t width;
-            uint32_t height;
-            const char* title;
+            uint32_t m_width = 800;
+            uint32_t m_height = 800;
+            const char* m_title = "Title";
     };
 }

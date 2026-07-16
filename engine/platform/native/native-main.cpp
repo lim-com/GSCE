@@ -61,15 +61,15 @@ int main(void)
     RayCollision collision = { 0 };     // Ray collision hit info
 
     //loadModel
-    Model model = LoadModel("Cross.obj");
+    //Model model = LoadModel("Cross.obj");
 
     std::cout << "model loaded" << std::endl;
 
-    if (model.meshes == NULL) {
-        // ... обработка ошибки, если модель не загрузилась
-        CloseWindow();
-        return -1;
-    }
+    // if (model.meshes == NULL) {
+    //     // ... обработка ошибки, если модель не загрузилась
+    //     CloseWindow();
+    //     return -1;
+    // }
 
     SetTargetFPS(120);                   // Set our game to run at 120 frames-per-second
     //--------------------------------------------------------------------------------------
@@ -162,10 +162,10 @@ int main(void)
 
             BeginMode3D(camera);
 
-                std::cout << "model drawn in frame" << std::endl;
+                //std::cout << "model drawn in frame" << std::endl;
 
-                DrawModel(model, {0, 0, 0}, 1.0f, GRAY);
-                DrawModelWires(model, {0, 0, 0}, 1.0f, BLACK);
+                // DrawModel(model, {0, 0, 0}, 1.0f, GRAY);
+                // DrawModelWires(model, {0, 0, 0}, 1.0f, BLACK);
 
                 // if (collision.hit)
                 // {
@@ -204,7 +204,7 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadModel(model);
+    //UnloadModel(model);
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
 
