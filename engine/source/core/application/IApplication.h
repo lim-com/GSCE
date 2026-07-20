@@ -1,26 +1,22 @@
 // IApplication.h
 #pragma once
 #include <cstdint>
-#include <raylib.h>
-#include <string>
 
-namespace engine::core
+namespace gsce::core
 {
     class IApplication
     {
         public:
             IApplication();
-            virtual void Start() = 0;
-            virtual void Stop() = 0;
-
-            virtual Vector2 GetWindowSize() = 0;
-            virtual void SetWindowSize(int width, int height) = 0;
-
             virtual ~IApplication();
 
+            virtual void Initialize();
+            virtual void Run() = 0;
+            virtual void Shutdown();
+
         private:
-            uint32_t width;
-            uint32_t height;
-            const char* title;
+            uint32_t m_width;
+            uint32_t m_height;
+            const char* m_title;
     };
 }

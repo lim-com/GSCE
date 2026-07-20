@@ -6,8 +6,14 @@
 #include <ostream>
 
 #include "raylib.h"
+#include "raylib-imgui/rlImGui.h"
+#include "imgui.h"
 #include "entt.hpp"
 #include "cmath"
+#include "spdlog/spdlog.h"
+
+#include "implementations/Application.h"
+#include "spdlog/sinks/stdout_color_sinks-inl.h"
 
 
 #ifdef __EMSCRIPTEN__
@@ -43,8 +49,23 @@ int main(void)
 
     bool isCameraUsed = false;
 
+    //auto application = std::make_unique<gsce::web::Application>();
+
+    auto logger = spdlog::stdout_color_mt("gsce");
+    logger->info("logger initialized");
+
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(screenWidth, screenHeight, "raylib [core] example - 3d picking");
+
+    //application->Initialize();
+
+    rlImGuiSetup(true);
+
+    // Член класса Application
+    RenderTexture viewportRT;
+
+    // Initialize()
+    viewportRT = LoadRenderTexture(800, 600);
 
     // Define the camera to look into our 3d world
     Camera camera = { 0 };
@@ -154,49 +175,106 @@ int main(void)
         }
         //----------------------------------------------------------------------------------
 
+        // Рендерим сцену в текстуру
+        BeginTextureMode(viewportRT);
+
+        ClearBackground(RAYWHITE);
+        BeginMode3D(camera);
+
+            // DrawModel(model, {0, 0, 0}, 1.0f, GRAY);
+            // DrawModelWires(model, {0, 0, 0}, 1.0f, BLACK);
+
+            if (collision.hit)
+            {
+                DrawCube(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, RED);
+                DrawCubeWires(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, MAROON);
+
+                DrawCubeWires(cubePosition, cubeSize.x + 0.2f, cubeSize.y + 0.2f, cubeSize.z + 0.2f, GREEN);
+            }
+            else
+            {
+                DrawCube(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, GRAY);
+                DrawCubeWires(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, DARKGRAY);
+            }
+
+            DrawRay(ray, MAROON);
+            DrawGrid(20, 1.0f);
+
+        EndMode3D();
+
+        DrawText("Try clicking on the box with your mouse!", 240, 10, 20, DARKGRAY);
+
+        if (collision.hit) DrawText("BOX SELECTED", (screenWidth - MeasureText("BOX SELECTED", 30))/2, (int)(screenHeight*0.1f), 30, GREEN);
+
+        DrawText("Right click mouse to toggle camera controls", 10, 430, 10, GRAY);
+
+        if (IsKeyPressed(KEY_F))
+        {
+            ToggleFullscreen();
+        }
+        DrawFPS(10, 10);
+
+        EndTextureMode();
+
         // Draw
         //----------------------------------------------------------------------------------
         BeginDrawing();
 
             ClearBackground(RAYWHITE);
 
-            BeginMode3D(camera);
+            rlImGuiBegin();
 
-                std::cout << "model drawn in frame" << std::endl;
+            //---------
 
-                DrawModel(model, {0, 0, 0}, 1.0f, GRAY);
-                DrawModelWires(model, {0, 0, 0}, 1.0f, WHITE);
+            // Окно с вьюпортом
+            ImGui::Begin("3D Viewport");
+            ImVec2 size = ImGui::GetContentRegionAvail();
+            ImGui::Image((void*)(intptr_t)viewportRT.texture.id, size, ImVec2(0,1), ImVec2(1,0));
+            ImGui::End();
 
-                // if (collision.hit)
-                // {
-                //     DrawCube(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, RED);
-                //     DrawCubeWires(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, MAROON);
-                //
-                //     DrawCubeWires(cubePosition, cubeSize.x + 0.2f, cubeSize.y + 0.2f, cubeSize.z + 0.2f, GREEN);
-                // }
-                // else
-                // {
-                //     DrawCube(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, GRAY);
-                //     DrawCubeWires(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, DARKGRAY);
-                // }
+            // Можешь добавить другие окна
+            ImGui::Begin("Controls");
+            ImGui::Text("FPS: %.1f", static_cast<float>(GetFPS()));
+            ImGui::End();
 
-                DrawRay(ray, MAROON);
-                DrawGrid(20, 1.0f);
+            //---------
 
-            EndMode3D();
+            // BeginMode3D(camera);
+            //
+            //     DrawModel(model, {0, 0, 0}, 1.0f, GRAY);
+            //     DrawModelWires(model, {0, 0, 0}, 1.0f, BLACK);
+            //
+            //     // if (collision.hit)
+            //     // {
+            //     //     DrawCube(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, RED);
+            //     //     DrawCubeWires(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, MAROON);
+            //     //
+            //     //     DrawCubeWires(cubePosition, cubeSize.x + 0.2f, cubeSize.y + 0.2f, cubeSize.z + 0.2f, GREEN);
+            //     // }
+            //     // else
+            //     // {
+            //     //     DrawCube(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, GRAY);
+            //     //     DrawCubeWires(cubePosition, cubeSize.x, cubeSize.y, cubeSize.z, DARKGRAY);
+            //     // }
+            //
+            //     DrawRay(ray, MAROON);
+            //     DrawGrid(20, 1.0f);
+            //
+            // EndMode3D();
+            //
+            // DrawText("Try clicking on the box with your mouse!", 240, 10, 20, DARKGRAY);
+            //
+            // if (collision.hit) DrawText("BOX SELECTED", (screenWidth - MeasureText("BOX SELECTED", 30))/2, (int)(screenHeight*0.1f), 30, GREEN);
+            //
+            // DrawText("Right click mouse to toggle camera controls", 10, 430, 10, GRAY);
+            //
+            // if (IsKeyPressed(KEY_F))
+            // {
+            //     ToggleFullscreen();
+            // }
+            // DrawFPS(10, 10);
 
-            DrawText("Try clicking on the box with your mouse!", 240, 10, 20, DARKGRAY);
-
-            if (collision.hit) DrawText("BOX SELECTED", (screenWidth - MeasureText("BOX SELECTED", 30))/2, (int)(screenHeight*0.1f), 30, GREEN);
-
-            DrawText("Right click mouse to toggle camera controls", 10, 430, 10, GRAY);
-
-            if (IsKeyPressed(KEY_F))
-            {
-                ToggleFullscreen();
-            }
-            DrawFPS(10, 10);
-
+            rlImGuiEnd();
 
         EndDrawing();
         //----------------------------------------------------------------------------------
@@ -205,7 +283,8 @@ int main(void)
     // De-Initialization
     //--------------------------------------------------------------------------------------
     UnloadModel(model);
-    CloseWindow();        // Close window and OpenGL context
+    rlImGuiShutdown();
+    //application->Shutdown();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------
 
     return 0;

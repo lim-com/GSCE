@@ -1,17 +1,18 @@
 #pragma once
 #include <core/application/IApplication.h>
 
-namespace engine::web
+namespace gsce::web
 {
-    class Application : public engine::core::IApplication
+    class Application : public gsce::core::IApplication
     {
         public:
             Application();
 
-            void Start() override;
-            void Stop() override;
+            void Initialize() override;
+            void Run() override;
+            void Shutdown() override;
 
-            Vector2 GetWindowSize() override;
+            Vector2 GetWindowSize() const override;
             void SetWindowSize(int width, int height) override;
 
             ~Application() override;
