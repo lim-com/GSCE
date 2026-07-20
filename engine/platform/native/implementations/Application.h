@@ -12,9 +12,6 @@ namespace gsce::native
             void Run();
             void Shutdown() const;
 
-            Vector2 GetWindowSize() const;
-            void SetWindowSize(int width, int height);
-
             ~Application();
 
         private:

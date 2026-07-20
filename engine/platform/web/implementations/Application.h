@@ -12,9 +12,6 @@ namespace gsce::web
             void Run() override;
             void Shutdown() override;
 
-            Vector2 GetWindowSize() const override;
-            void SetWindowSize(int width, int height) override;
-
             ~Application() override;
 
         private:
