@@ -4,7 +4,7 @@
 #include <raylib.h>
 #include <string>
 
-namespace engine::core
+namespace gsce::core
 {
     class IApplication
     {

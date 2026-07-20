@@ -1,9 +1,9 @@
 #pragma once
 #include <core/application/IApplication.h>
 
-namespace engine::web
+namespace gsce::web
 {
-    class Application : public engine::core::IApplication
+    class Application : public core::IApplication
     {
         public:
             Application();

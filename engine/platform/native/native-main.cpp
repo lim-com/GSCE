@@ -8,6 +8,7 @@
 #include "raylib.h"
 #include "entt.hpp"
 #include "cmath"
+#include <native/implementations/Application.h>
 
 
 #ifdef __EMSCRIPTEN__
@@ -42,6 +43,8 @@ int main(void)
     const int screenHeight = 450;
 
     bool isCameraUsed = false;
+
+    auto app = std::make_unique<gsce::native::Application>();
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(screenWidth, screenHeight, "raylib [core] example - 3d picking");

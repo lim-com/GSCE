@@ -43,5 +43,7 @@ else()
     )
 endif ()
 
+target_include_directories(engine PRIVATE ${PLATFORM_HEADERS})
+
 target_sources(engine PRIVATE ${PLATFORM_HEADERS})
 target_sources(engine PRIVATE ${PLATFORM_SOURCE})
