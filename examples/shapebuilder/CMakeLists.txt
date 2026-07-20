@@ -2,7 +2,7 @@ add_executable(shapebuilder
     shapebuilder-main.cpp
 )
 
-target_link_libraries(shapebuilder PRIVATE engine)
+target_link_libraries(shapebuilder PRIVATE gsce)
 
 if (MINGW)
     target_link_options(shapebuilder PRIVATE -static-libgcc -static-libstdc++ -static)
