@@ -51,12 +51,9 @@ int main(void)
 
     bool isCameraUsed = false;
 
-    auto application = std::make_unique<gsce::native::Application>();
-
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-    //InitWindow(screenWidth, screenHeight, "raylib [core] example - 3d picking");
+    InitWindow(screenWidth, screenHeight, "raylib [core] example - 3d picking");
 
-    application->Initialize();
 
     rlImGuiSetup(true);
 
@@ -79,17 +76,6 @@ int main(void)
 
     Ray ray = { 0 };                    // Picking line ray
     RayCollision collision = { 0 };     // Ray collision hit info
-
-    //loadModel
-    Model model = LoadModel("Cross.obj");
-
-    std::cout << "model loaded" << std::endl;
-
-    if (model.meshes == NULL) {
-        // ... обработка ошибки, если модель не загрузилась
-        CloseWindow();
-        return -1;
-    }
 
     SetTargetFPS(120);                   // Set our game to run at 120 frames-per-second
     //--------------------------------------------------------------------------------------
@@ -281,9 +267,8 @@ int main(void)
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
-    UnloadModel(model);
-    rlImGuiShutdown();
-    application->Shutdown();        // Close window and OpenGL context
+    rlImGuiShutdown();// Close window and OpenGL context
+    CloseWindow();
     //--------------------------------------------------------------------------------------
 
     return 0;
